@@ -1,9 +1,9 @@
 /*
  * This turns an arduino into a USB MIDI instrument.
- * 
+ *
  * Author: Rudolf W Byker
  * Based on code by gurbrinder grewal and Arduino LLC.
- */ 
+ */
 
 #include "MIDIUSB.h"
 
@@ -27,7 +27,8 @@ void noteOff(byte channel, byte pitch, byte velocity) {
 struct Note {
   byte pin;
   byte pitch;
-  bool lastValue;
+  byte value;
+  bool on;
 };
 
 
@@ -35,60 +36,60 @@ struct Note {
 Note notes[NUM_NOTES];
 
 void setup() {
-  notes[0] = (struct Note){0, 21, false};
-  notes[1] = (struct Note){1, 22, false};
-  notes[2] = (struct Note){2, 23, false};
-  notes[3] = (struct Note){3, 24, false};
-  notes[4] = (struct Note){4, 25, false};
-  notes[5] = (struct Note){5, 26, false};
-  notes[6] = (struct Note){6, 27, false};
-  notes[7] = (struct Note){7, 28, false};
-  notes[8] = (struct Note){8, 29, false};
-  notes[9] = (struct Note){9, 30, false};
-  notes[10] = (struct Note){10, 31, false};
-  notes[11] = (struct Note){11, 32, false};
-  notes[12] = (struct Note){12, 33, false};
-  notes[13] = (struct Note){13, 34, false};
-  notes[14] = (struct Note){14, 35, false};
-  notes[15] = (struct Note){15, 36, false};
-  notes[16] = (struct Note){16, 37, false};
-  notes[17] = (struct Note){17, 38, false};
-  notes[18] = (struct Note){18, 39, false};
-  notes[19] = (struct Note){19, 40, false};
-  notes[20] = (struct Note){20, 41, false};
-  notes[21] = (struct Note){21, 42, false};
-  notes[22] = (struct Note){22, 43, false};
-  notes[23] = (struct Note){23, 44, false};
-  notes[24] = (struct Note){24, 45, false};
-  notes[25] = (struct Note){25, 46, false};
-  notes[26] = (struct Note){26, 47, false};
-  notes[27] = (struct Note){27, 48, false};
-  notes[28] = (struct Note){28, 49, false};
-  notes[29] = (struct Note){29, 50, false};
-  notes[30] = (struct Note){30, 51, false};
-  notes[31] = (struct Note){31, 52, false};
-  notes[32] = (struct Note){32, 53, false};
-  notes[33] = (struct Note){33, 54, false};
-  notes[34] = (struct Note){34, 55, false};
-  notes[35] = (struct Note){35, 56, false};
-  notes[36] = (struct Note){36, 57, false};
-  notes[37] = (struct Note){37, 58, false};
-  notes[38] = (struct Note){38, 59, false};
-  notes[39] = (struct Note){39, 60, false};
-  notes[40] = (struct Note){40, 61, false};
-  notes[41] = (struct Note){41, 62, false};
-  notes[42] = (struct Note){42, 63, false};
-  notes[43] = (struct Note){43, 64, false};
-  notes[44] = (struct Note){44, 65, false};
-  notes[45] = (struct Note){45, 66, false};
-  notes[46] = (struct Note){46, 67, false};
-  notes[47] = (struct Note){47, 68, false};
-  notes[48] = (struct Note){48, 69, false};
-  notes[49] = (struct Note){49, 70, false};
-  notes[50] = (struct Note){50, 71, false};
-  notes[51] = (struct Note){51, 72, false};
-  notes[52] = (struct Note){52, 73, false};
-  notes[53] = (struct Note){53, 74, false};
+  notes[0] = (struct Note){0, 53, 0, false}; // F3
+  notes[1] = (struct Note){1, 54, 0, false};
+  notes[2] = (struct Note){2, 55, 0, false};
+  notes[3] = (struct Note){3, 56, 0, false};
+  notes[4] = (struct Note){4, 57, 0, false};
+  notes[5] = (struct Note){5, 58, 0, false};
+  notes[6] = (struct Note){6, 59, 0, false};
+  notes[7] = (struct Note){7, 60, 0, false};
+  notes[8] = (struct Note){8, 61, 0, false};
+  notes[9] = (struct Note){9, 62, 0, false};
+  notes[10] = (struct Note){10, 63, 0, false};
+  notes[11] = (struct Note){11, 64, 0, false};
+  notes[12] = (struct Note){12, 65, 0, false};
+  notes[13] = (struct Note){13, 66, 0, false};
+  notes[14] = (struct Note){14, 67, 0, false};
+  notes[15] = (struct Note){15, 68, 0, false};
+  notes[16] = (struct Note){16, 69, 0, false};
+  notes[17] = (struct Note){17, 70, 0, false};
+  notes[18] = (struct Note){18, 71, 0, false};
+  notes[19] = (struct Note){19, 72, 0, false};
+  notes[20] = (struct Note){20, 73, 0, false};
+  notes[21] = (struct Note){21, 74, 0, false};
+  notes[22] = (struct Note){22, 75, 0, false};
+  notes[23] = (struct Note){23, 76, 0, false};
+  notes[24] = (struct Note){24, 77, 0, false};
+  notes[25] = (struct Note){25, 78, 0, false};
+  notes[26] = (struct Note){26, 79, 0, false};
+  notes[27] = (struct Note){27, 80, 0, false};
+  notes[28] = (struct Note){28, 81, 0, false};
+  notes[29] = (struct Note){29, 82, 0, false};
+  notes[30] = (struct Note){30, 83, 0, false};
+  notes[31] = (struct Note){31, 84, 0, false};
+  notes[32] = (struct Note){32, 85, 0, false};
+  notes[33] = (struct Note){33, 86, 0, false};
+  notes[34] = (struct Note){34, 87, 0, false};
+  notes[35] = (struct Note){35, 88, 0, false};
+  notes[36] = (struct Note){36, 89, 0, false};
+  notes[37] = (struct Note){37, 90, 0, false};
+  notes[38] = (struct Note){38, 91, 0, false};
+  notes[39] = (struct Note){39, 92, 0, false};
+  notes[40] = (struct Note){40, 93, 0, false};
+  notes[41] = (struct Note){41, 94, 0, false};
+  notes[42] = (struct Note){42, 95, 0, false};
+  notes[43] = (struct Note){43, 96, 0, false};
+  notes[44] = (struct Note){44, 97, 0, false};
+  notes[45] = (struct Note){45, 98, 0, false};
+  notes[46] = (struct Note){46, 100, 0, false};
+  notes[47] = (struct Note){47, 101, 0, false};
+  notes[48] = (struct Note){48, 102, 0, false};
+  notes[49] = (struct Note){49, 103, 0, false};
+  notes[50] = (struct Note){50, 104, 0, false};
+  notes[51] = (struct Note){51, 105, 0, false};
+  notes[52] = (struct Note){52, 106, 0, false};
+  notes[53] = (struct Note){53, 107, 0, false};
 
   byte i;
   for (i=0; i<NUM_NOTES; i++) {
@@ -107,21 +108,42 @@ void controlChange(byte channel, byte control, byte value) {
 }
 
 const byte velocity = 64;
+const byte maxValue = 4;
 void map(struct Note * note, byte channel) {
-  if (note->lastValue) {
-    // Pin was high. Read new value.
-    note->lastValue = digitalRead(note->pin);
-    if (!note->lastValue) {
-      // Pin fell. Play note.
-      noteOn(channel, note->pitch, velocity);
+  // Simulate a capacitor to debounce the pin.
+  // If the pin is low, the switch is connected, and we increase the value.
+  // If the pin is high, the switch is open, and we decrease the value.
+  // We cap the value between 0 and maxValue.
+  // When one of the thresholds are reached, we trigger the note on or off.
+  bool pin = digitalRead(note->pin);
+
+  if (pin) {
+    // Switch is opening.
+    if (note->value > 0) {
+      note->value--;
+    }
+  } else {
+    // Switch is closing.
+    if (note->value < maxValue) {
+      note->value++;
     }
   }
-  else {
-    // Pin was low. Read new value.
-    note->lastValue = digitalRead(note->pin);
-    if (note->lastValue) {
-      // Pin rose. Stop note.
+
+  if (note->on) {
+    // Note is playing.
+
+    if (note->value == 0) {
+      // Note should stop playing.
       noteOff(channel, note->pitch, velocity);
+      note->on = false;
+    }
+  } else {
+    // Note is not playing.
+
+    if (note->value == maxValue) {
+      // Note should start playing.
+      noteOn(channel, note->pitch, velocity);
+      note->on = true;
     }
   }
 }
