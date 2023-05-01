@@ -19,7 +19,12 @@ void initNotePins(struct Note *notes, uint8_t numNotes);
 
 struct Note createNote(uint8_t pin, uint8_t pitch);
 
-void createConsecutiveNotesInArray(uint8_t firstPin, uint8_t firstPitch, uint8_t numNotes, struct Note *destination);
+void createConsecutiveNotesInArray(
+  uint8_t firstPin,
+  uint8_t firstPitch,
+  uint8_t numNotes,
+  struct Note *destination
+);
 
 void mapNote(
   struct Note * note,

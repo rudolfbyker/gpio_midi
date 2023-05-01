@@ -25,7 +25,12 @@ struct Note createNote(uint8_t pin, uint8_t pitch) {
 }
 
 
-void createConsecutiveNotesInArray(uint8_t firstPin, uint8_t firstPitch, uint8_t numNotes, struct Note *destination) {
+void createConsecutiveNotesInArray(
+  uint8_t firstPin,
+  uint8_t firstPitch,
+  uint8_t numNotes,
+  struct Note *destination
+) {
   uint8_t i;
   for (i=0; i<numNotes; i++) {
     destination[i] = createNote(
