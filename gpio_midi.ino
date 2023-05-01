@@ -10,7 +10,7 @@
 
 
 #define NOTE_VELOCITY 64
-#define NOTE_VALUE_MAX 4
+#define MIDI_CHANNEL 0
 
 // 61 notes on a 5-octave keyboard.
 #define NUM_NOTES 61
@@ -21,7 +21,9 @@
 // 36 is C2 in MIDI.
 #define FIRST_PITCH 36
 
+
 struct Note notes[NUM_NOTES];
+
 
 void setup() {
   Serial.begin(115200);
@@ -36,7 +38,7 @@ void setup() {
 void loop() {
   uint8_t i;
   for (i=0; i<NUM_NOTES; i++) {
-    mapNote(&notes[i], 0);
+    mapNote(&notes[i], noteOn, noteOff);
   }
   MidiUSB.flush();
 }
@@ -59,53 +61,13 @@ void printNotes() {
 }
 
 
-void mapNote(struct Note * note, uint8_t channel) {
-  // Simulate a capacitor to debounce the pin.
-  // If the pin is low, the switch is connected, and we increase the value.
-  // If the pin is high, the switch is open, and we decrease the value.
-  // We cap the value between 0 and NOTE_VALUE_MAX.
-  // When one of the limits are reached, we trigger the note on or off.
-  bool pin = digitalRead(note->pin);
-
-  if (pin) {
-    // Switch is opening.
-    if (note->value > 0) {
-      note->value--;
-    }
-  } else {
-    // Switch is closing.
-    if (note->value < NOTE_VALUE_MAX) {
-      note->value++;
-    }
-  }
-
-  if (note->on) {
-    // Note is playing.
-
-    if (note->value == 0) {
-      // Note should stop playing.
-      noteOff(channel, note->pitch, NOTE_VELOCITY);
-      note->on = false;
-    }
-  } else {
-    // Note is not playing.
-
-    if (note->value == NOTE_VALUE_MAX) {
-      // Note should start playing.
-      noteOn(channel, note->pitch, NOTE_VELOCITY);
-      note->on = true;
-    }
-  }
+void noteOn(const struct Note * const note) {
+  MidiUSB.sendMIDI(MIDI_EVENT_NOTE_ON(MIDI_CHANNEL, note->pitch, NOTE_VELOCITY));
 }
 
 
-void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity) {
-  MidiUSB.sendMIDI(MIDI_EVENT_NOTE_ON(channel, pitch, velocity));
-}
-
-
-void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity) {
-  MidiUSB.sendMIDI(MIDI_EVENT_NOTE_OFF(channel, pitch, velocity));
+void noteOff(const struct Note * const note) {
+  MidiUSB.sendMIDI(MIDI_EVENT_NOTE_OFF(MIDI_CHANNEL, note->pitch, NOTE_VELOCITY));
 }
 
 
