@@ -2,7 +2,6 @@
  * This turns an arduino into a USB MIDI instrument.
  *
  * Author: Rudolf W Byker
- * Based on code by gurbrinder grewal and Arduino LLC.
  */
 
 #include "MIDIUSB.h"
