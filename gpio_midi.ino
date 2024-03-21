@@ -6,7 +6,6 @@
 
 #include "MIDIUSB.h"
 #include "midiUtil.h"
-#include "notesUtil.h"
 #include "analogMux.h"
 #include "analogControl.h"
 #include "digitalControl.h"
@@ -20,7 +19,7 @@ uint8_t numMuxes = 0;
 uint8_t numAnalogControls = 0; // Maximum `numMuxes*8`
 uint8_t numDigitalControls = 0;
 
-struct Note * notes;
+struct DigitalControl * notes;
 struct AnalogMux8 * muxes;
 struct AnalogControl * analogControls;
 struct DigitalControl * digitalControls;
@@ -50,19 +49,19 @@ void setup() {
 void setupDolfOrganUpper() {
   // 61 notes on a 5-octave keyboard.
   numNotes = 61;
-  notes = (struct Note*) malloc(numNotes * sizeof *notes);
+  notes = (struct DigitalControl*) malloc(numNotes * sizeof *notes);
   if (notes == NULL) {
     Serial.println("Error: Unable to allocate memory for notes.");
     Serial.flush();
     return;
   }
-  createConsecutiveNotesInArray(
-    2,  // Leave pins 0 and 1 open for the serial port.
-    36,  // 36 is C2 in MIDI.
+  createConsecutiveDigitalControlsInArray(
+    notes,
     numNotes,
-    notes
+    MIDI_CHANNEL,
+    36,  // Note number 36 is C2 in MIDI.
+    2  // Leave pins 0 and 1 open for the serial port.
   );
-  initNotePins(notes, numNotes);
 }
 
 
@@ -81,19 +80,19 @@ void setupDolfOrganLower() {
 void setupDolfOrganPedal() {
   // 25 notes on a 3-octave pedal.
   numNotes = 25;
-  notes = (struct Note*) malloc(numNotes * sizeof *notes);
+  notes = (struct DigitalControl*) malloc(numNotes * sizeof *notes);
   if (notes == NULL) {
     Serial.println("Error: Unable to allocate memory for notes.");
     Serial.flush();
     return;
   }
-  createConsecutiveNotesInArray(
-    2,  // Leave pins 0 and 1 open for the serial port.
-    36,  // 36 is C2 in MIDI.
+  createConsecutiveDigitalControlsInArray(
+    notes,
     numNotes,
-    notes
+    MIDI_CHANNEL,
+    36,  // Note number 36 is C2 in MIDI.
+    2  // Leave pins 0 and 1 open for the serial port.
   );
-  initNotePins(notes, numNotes);
 
   // Because my pedal is only 3 octaves, I have many open pins for analog and digital controls on this arduino.
 
@@ -174,7 +173,7 @@ void loop() {
   // TODO: We probably need to read notes more frequently than controls.
 
   for (i=0; i<numNotes; i++) {
-    mapNote(&notes[i], noteOn, noteOff);
+    digitalControl_map(&notes[i], noteChange);
   }
 
   for (i=0; i<numAnalogControls; i++) {
@@ -198,7 +197,7 @@ void printNotes() {
     Serial.print(",");
     Serial.print(notes[i].pin);
     Serial.print(",");
-    Serial.print(notes[i].pitch);
+    Serial.print(notes[i].midiControlNumber);
     Serial.println();
   }
   Serial.println("</notes>");
@@ -252,13 +251,12 @@ void printDigitalControls() {
 }
 
 
-void noteOn(const struct Note * const note) {
-  MidiUSB.sendMIDI(MIDI_EVENT_NOTE_ON(MIDI_CHANNEL, note->pitch, NOTE_VELOCITY));
-}
-
-
-void noteOff(const struct Note * const note) {
-  MidiUSB.sendMIDI(MIDI_EVENT_NOTE_OFF(MIDI_CHANNEL, note->pitch, NOTE_VELOCITY));
+void noteChange(const struct DigitalControl * const control) {
+  if (control->on) {
+    MidiUSB.sendMIDI(MIDI_EVENT_NOTE_ON(control->midiChannel, control->midiControlNumber, NOTE_VELOCITY));
+  } else {
+    MidiUSB.sendMIDI(MIDI_EVENT_NOTE_OFF(control->midiChannel, control->midiControlNumber, NOTE_VELOCITY));
+  }
 }
 
 
