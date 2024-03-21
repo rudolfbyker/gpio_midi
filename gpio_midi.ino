@@ -145,6 +145,8 @@ void setupDolfOrganPedal() {
     MIDI_CHANNEL,
     0
   );
+  // Reassign control from MIDI control number 6 to 65, because Hauptwerk does not respond to 6 for some unknown reason.
+  analogControls[6].number = 65;
   for (i=0; i<numAnalogControls; i++) {
     analogControl_init(&analogControls[i]);
   }
