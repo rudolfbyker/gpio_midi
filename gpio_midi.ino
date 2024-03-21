@@ -12,7 +12,6 @@
 
 
 #define NOTE_VELOCITY 64
-#define MIDI_CHANNEL 0
 
 uint8_t numNotes = 0;
 uint8_t numMuxes = 0;
@@ -58,7 +57,7 @@ void setupDolfOrganUpper() {
   createConsecutiveDigitalControlsInArray(
     notes,
     numNotes,
-    MIDI_CHANNEL,
+    2,  // MIDI channels in Hauptwerk are numbered starting from the pedal at 0 and going up.
     36,  // Note number 36 is C2 in MIDI.
     2  // Leave pins 0 and 1 open for the serial port.
   );
@@ -69,8 +68,21 @@ void setupDolfOrganUpper() {
  * Setup the Arduino for the lower ("great") keyboard on Dolf's organ.
  */
 void setupDolfOrganLower() {
-  // Identical to Upper.
-  setupDolfOrganUpper();
+  // 61 notes on a 5-octave keyboard.
+  numNotes = 61;
+  notes = (struct DigitalControl*) malloc(numNotes * sizeof *notes);
+  if (notes == NULL) {
+    Serial.println("Error: Unable to allocate memory for notes.");
+    Serial.flush();
+    return;
+  }
+  createConsecutiveDigitalControlsInArray(
+    notes,
+    numNotes,
+    1,  // MIDI channels in Hauptwerk are numbered starting from the pedal at 0 and going up.
+    36,  // Note number 36 is C2 in MIDI.
+    2  // Leave pins 0 and 1 open for the serial port.
+  );
 }
 
 
@@ -78,6 +90,8 @@ void setupDolfOrganLower() {
  * Setup the Arduino for the pedals on Dolf's organ.
  */
 void setupDolfOrganPedal() {
+  uint8_t midiChannel = 0;  // MIDI channels in Hauptwerk are numbered starting from the pedal at 0 and going up.
+
   // 25 notes on a 3-octave pedal.
   numNotes = 25;
   notes = (struct DigitalControl*) malloc(numNotes * sizeof *notes);
@@ -89,7 +103,7 @@ void setupDolfOrganPedal() {
   createConsecutiveDigitalControlsInArray(
     notes,
     numNotes,
-    MIDI_CHANNEL,
+    midiChannel,
     36,  // Note number 36 is C2 in MIDI.
     2  // Leave pins 0 and 1 open for the serial port.
   );
@@ -141,7 +155,7 @@ void setupDolfOrganPedal() {
     numMuxes,
     analogControls,
     numAnalogControls,
-    MIDI_CHANNEL,
+    midiChannel,
     0
   );
   // Reassign control from MIDI control number 6 to 65, because Hauptwerk does not respond to 6 for some unknown reason.
@@ -160,7 +174,7 @@ void setupDolfOrganPedal() {
   createConsecutiveDigitalControlsInArray(
     digitalControls,
     numDigitalControls,
-    MIDI_CHANNEL,
+    midiChannel,
     48,
     27
   );
