@@ -9,6 +9,7 @@
 #include "notesUtil.h"
 #include "analogMux.h"
 #include "analogControl.h"
+#include "digitalControl.h"
 
 
 #define NOTE_VELOCITY 64
@@ -17,12 +18,12 @@
 uint8_t numNotes = 0;
 uint8_t numMuxes = 0;
 uint8_t numAnalogControls = 0; // Maximum `numMuxes*8`
-uint8_t numDigitalControls = 0; // TODO!
+uint8_t numDigitalControls = 0;
 
 struct Note * notes;
 struct AnalogMux8 * muxes;
 struct AnalogControl * analogControls;
-//struct DigitalControl digitalControls[NUM_DIGITAL_CONTROLS];  TODO!
+struct DigitalControl * digitalControls;
 
 
 void setup() {
@@ -39,7 +40,7 @@ void setup() {
 
   printNotes();
   printAnalogControls();
-  // printDigitalControls();  // TODO!
+  printDigitalControls();
 }
 
 
@@ -142,13 +143,26 @@ void setupDolfOrganPedal() {
     analogControls,
     numAnalogControls,
     MIDI_CHANNEL,
-    1 // TODO?
+    0
   );
   for (i=0; i<numAnalogControls; i++) {
     analogControl_init(&analogControls[i]);
   }
 
-  numDigitalControls = 0; // TODO!
+  numDigitalControls = 2;
+  digitalControls = (struct DigitalControl*) malloc(numDigitalControls * sizeof *digitalControls);
+  if (digitalControls == NULL) {
+    Serial.println("Error: Unable to allocate memory for digital controls.");
+    Serial.flush();
+    return;
+  }
+  createConsecutiveDigitalControlsInArray(
+    digitalControls,
+    numDigitalControls,
+    MIDI_CHANNEL,
+    48,
+    27
+  );
 }
 
 
@@ -162,12 +176,12 @@ void loop() {
   }
 
   for (i=0; i<numAnalogControls; i++) {
-    analogControl_map(&analogControls[i], controlChange);
+    analogControl_map(&analogControls[i], analogControlChange);
   }
 
-  // for (i=0; i<numDigitalControls; i++) {
-  //   TODO!
-  // }
+  for (i=0; i<numDigitalControls; i++) {
+    digitalControl_map(&digitalControls[i], digitalControlChange);
+  }
 
   MidiUSB.flush();
 }
@@ -213,6 +227,29 @@ void printAnalogControls() {
 }
 
 
+void printDigitalControls() {
+  Serial.println("<digitalControls>");
+  Serial.println("i,pin,midiChannel,midiControlNumber,value,on");
+  uint8_t i;
+  for (i=0; i<numDigitalControls; i++) {
+    Serial.print(i);
+    Serial.print(",");
+    Serial.print(digitalControls[i].pin);
+    Serial.print(",");
+    Serial.print(digitalControls[i].midiChannel);
+    Serial.print(",");
+    Serial.print(digitalControls[i].midiControlNumber);
+    Serial.print(",");
+    Serial.print(digitalControls[i].value);
+    Serial.print(",");
+    Serial.print(digitalControls[i].on);
+    Serial.println();
+  }
+  Serial.println("</digitalControls>");
+  Serial.flush();
+}
+
+
 void noteOn(const struct Note * const note) {
   MidiUSB.sendMIDI(MIDI_EVENT_NOTE_ON(MIDI_CHANNEL, note->pitch, NOTE_VELOCITY));
 }
@@ -223,10 +260,17 @@ void noteOff(const struct Note * const note) {
 }
 
 
-void controlChange(const struct AnalogControl * const control) {
+void analogControlChange(const struct AnalogControl * const control) {
   // MIDI control values are between 0 and 127 (7-bit unsigned).
   // The 12-bit ADC gives values between 0 and 4095 (12-bit unsigned).
   // We need to scale the ADC values to fit in the MIDI range.
   // We can do this by bit shifting (>> 5), which is the same as dividing by 32.
-  MidiUSB.sendMIDI(MIDI_EVENT_CONTROL_CHANGE(MIDI_CHANNEL, control->number, control->value >> 5));
+  MidiUSB.sendMIDI(MIDI_EVENT_CONTROL_CHANGE(control->channel, control->number, control->value >> 5));
+}
+
+
+void digitalControlChange(const struct DigitalControl * const control) {
+  // MIDI control values are between 0 and 127 (7-bit unsigned).
+  // Digital controls are either on or off.
+  MidiUSB.sendMIDI(MIDI_EVENT_CONTROL_CHANGE(control->midiChannel, control->midiControlNumber, control->on ? 127 : 0));
 }
